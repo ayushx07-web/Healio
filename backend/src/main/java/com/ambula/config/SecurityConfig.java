@@ -26,6 +26,8 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
+    // Defines the Security Filter Chain, distinguishing public endpoints (auth, doctor search)
+    // from protected operations requiring valid JWT authentication (patient history, bookings, consultations)
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
