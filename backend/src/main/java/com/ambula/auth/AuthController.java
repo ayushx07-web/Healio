@@ -13,6 +13,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // Handles both Patient and Doctor login, generating a JWT token on success
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
