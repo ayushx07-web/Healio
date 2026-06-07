@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Clock, Check, MapPin, ArrowDown, Shield, Calendar } from 'lucide-react';
+import { Search, Clock, Check, MapPin, ArrowDown, Calendar, Sparkles, CalendarCheck, CheckCircle } from 'lucide-react';
 import api from '../api/axios';
 import DoctorCard from '../components/DoctorCard';
 
@@ -218,21 +218,60 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Trust Badges */}
-      <div className="grid md:grid-cols-3 gap-6 pt-6">
-        {[
-          { icon: Search,   title: 'Smart Search',    desc: 'Filter specialists instantly by clinic location, fee range, or rating scores.' },
-          { icon: Calendar, title: 'Real-time Booking', desc: 'Secure live slots instantly without telephone verification or delay.' },
-          { icon: Shield,   title: 'Verified Profiles', desc: 'All medical licenses, qualifications, and bios undergo thorough background checks.' },
-        ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="bg-[#1c1c1e] rounded-3xl p-8 border border-zinc-900 shadow-sm hover:border-zinc-800 transition duration-300">
-            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mb-6">
-              <Icon size={22} className="stroke-[2]" />
+      {/* How Healio Works Section */}
+      <div className="pt-8 border-t border-zinc-900/60">
+        <div className="text-center max-w-xl mx-auto mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            How Healio works
+          </h2>
+          <p className="text-zinc-400 text-xs md:text-sm mt-2 font-medium">
+            From symptoms to confirmed booking in under 2 minutes.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          {/* Connecting Line for Desktop */}
+          <div className="hidden md:block absolute top-14 left-[15%] right-[15%] h-[1px] border-t border-dashed border-emerald-500/10 z-0 pointer-events-none" />
+
+          {[
+            {
+              icon: Sparkles,
+              number: '01',
+              title: 'Describe your symptoms',
+              desc: "Type how you're feeling in plain English. Our AI instantly suggests the right specialist for you."
+            },
+            {
+              icon: CalendarCheck,
+              number: '02',
+              title: 'Pick a doctor & slot',
+              desc: 'Browse verified doctors, check availability for the next 7 days, and choose a time that works for you.'
+            },
+            {
+              icon: CheckCircle,
+              number: '03',
+              title: 'Get confirmed instantly',
+              desc: 'Receive a unique Booking ID immediately. No calls, no waiting, no paper registers.'
+            }
+          ].map(({ icon: Icon, number, title, desc }) => (
+            <div
+              key={number}
+              className="bg-[rgba(255,255,255,0.03)] rounded-3xl p-8 border border-[rgba(255,255,255,0.08)] relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(255,255,255,0.15)] shadow-md group z-10"
+            >
+              {/* Large Muted Green Step Number */}
+              <div className="absolute top-4 right-4 text-7xl font-black text-emerald-500/10 select-none pointer-events-none group-hover:text-emerald-500/20 transition-colors duration-300">
+                {number}
+              </div>
+
+              {/* Icon Container */}
+              <div className="w-12 h-12 bg-zinc-950/80 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 border border-zinc-800/40">
+                <Icon size={22} className="stroke-[2]" />
+              </div>
+
+              <h3 className="font-semibold text-zinc-100 text-lg mb-2 relative z-10">{title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed font-medium relative z-10">{desc}</p>
             </div>
-            <h3 className="font-bold text-zinc-100 text-lg mb-2">{title}</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed font-medium">{desc}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
