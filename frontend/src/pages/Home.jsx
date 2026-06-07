@@ -1,17 +1,51 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Clock, Check, MapPin, ArrowDown, Calendar, Sparkles, CalendarCheck, CheckCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Search, Clock, Check, MapPin, ArrowDown, Calendar, Sparkles, CalendarCheck, CheckCircle, X } from 'lucide-react';
 import api from '../api/axios';
 import DoctorCard from '../components/DoctorCard';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const resultRef = useRef(null);
   const [symptoms, setSymptoms] = useState('');
   const [aiResult, setAiResult] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [doctors, setDoctors] = useState([]);
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      if (user && user.role === 'PATIENT') {
+        const dismissed = sessionStorage.getItem('dismissHealthBanner');
+        if (dismissed === 'true') {
+          setShowBanner(false);
+          return;
+        }
+
+        try {
+          const { data } = await api.get('/api/patient/health-summary');
+          const hasFilled = data && (data.bloodGroup || data.knownConditions || data.currentMedications);
+          setShowBanner(!hasFilled);
+        } catch (err) {
+          console.error('Failed to fetch health summary for banner:', err);
+          // If we fail because no summary exists, backend throws user not found or similar?
+          // Actually getByEmail returns default empty HealthSummary (fields are null), so it shouldn't fail unless network error or 404.
+          setShowBanner(true);
+        }
+      } else {
+        setShowBanner(false);
+      }
+    };
+    checkProfileStatus();
+  }, [user]);
+
+  const handleDismissBanner = () => {
+    sessionStorage.setItem('dismissHealthBanner', 'true');
+    setShowBanner(false);
+  };
 
   const specializations = [
     { name: 'Cardiologist', count: 12 },
@@ -63,6 +97,27 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
+      {/* Health Profile Incomplete Banner */}
+      {showBanner && (
+        <div className="bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 px-5 py-4 rounded-3xl flex items-center justify-between text-xs font-bold gap-3 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm">⚕</span>
+            <span>
+              Your health profile is incomplete. Doctors can prepare better when they know your history.
+              <Link to="/complete-profile" className="underline hover:text-emerald-300 transition ml-1 inline-flex items-center">
+                Complete now &rarr;
+              </Link>
+            </span>
+          </div>
+          <button 
+            onClick={handleDismissBanner}
+            className="text-emerald-500/60 hover:text-emerald-400 transition cursor-pointer p-1 shrink-0"
+          >
+            <X size={14} className="stroke-[3]" />
+          </button>
+        </div>
+      )}
+
       {/* Premium Cohesive Dark Hero Section */}
       <div className="bg-[#161b18] rounded-[2.5rem] p-8 md:p-16 border border-emerald-950/60 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-emerald-900/50">
         <span className="text-[11px] font-bold tracking-[0.2em] text-emerald-400 uppercase block mb-4">
