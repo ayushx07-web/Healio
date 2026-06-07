@@ -18,7 +18,10 @@ public class Consultation {
     @JoinColumn(name = "booking_id", unique = true)
     private Booking booking;
 
+    @Column(columnDefinition = "TEXT")
     private String diagnosisNotes;
+
+    @Column(columnDefinition = "TEXT")
     private String prescription;
 
     @Builder.Default
