@@ -28,3 +28,6 @@ buildNumber.properties
 # OS files
 .DS_Store
 Thumbs.db
+
+# Database
+backend/data/

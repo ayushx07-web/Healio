@@ -30,4 +30,6 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
            "ORDER BY s.startTime")
     List<Slot> findNextAvailableSlots(@Param("doctorId") Long doctorId,
                                        @Param("after") LocalDateTime after);
+
+    boolean existsByDoctorIdAndStartTime(Long doctorId, LocalDateTime startTime);
 }

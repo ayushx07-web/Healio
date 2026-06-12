@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -37,7 +38,15 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/doctors", "/api/doctors/**").permitAll()
+                .requestMatchers("/api/ai/suggest-specialist").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/ai/format-prescription").hasRole("DOCTOR")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                // Return 401 (not 403) for unauthenticated requests so the
+                // frontend axios interceptor can redirect to the correct login page
+                .authenticationEntryPoint(new HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED))
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
