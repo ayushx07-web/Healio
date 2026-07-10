@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Activity, Save, Edit2, X, User as UserIcon } from 'lucide-react';
+import { Activity, Save, Edit2, X, User as UserIcon, FileText } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+
 
 export default function PatientProfile() {
   const { user } = useAuth();
@@ -17,6 +19,10 @@ export default function PatientProfile() {
   const [tempBloodGroup, setTempBloodGroup] = useState('');
   const [tempKnownConditions, setTempKnownConditions] = useState('');
   const [tempCurrentMedications, setTempCurrentMedications] = useState('');
+
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(true);
+
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -40,6 +46,21 @@ export default function PatientProfile() {
     };
     fetchSummary();
   }, []);
+
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      try {
+        const { data } = await api.get('/api/consultations/my-prescriptions');
+        setPrescriptions(data || []);
+      } catch (err) {
+        console.error('Failed to load prescriptions:', err);
+      } finally {
+        setLoadingPrescriptions(false);
+      }
+    };
+    fetchPrescriptions();
+  }, []);
+
 
   const handleStartEdit = () => {
     setTempBloodGroup(bloodGroup);
@@ -230,6 +251,62 @@ export default function PatientProfile() {
                 <span>Edit</span>
               </button>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Prescription History Section */}
+      <div className="bg-[#1c1c1e] rounded-3xl border border-zinc-850 p-6 md:p-8 shadow-lg space-y-6">
+        <h2 className="text-lg font-bold text-zinc-200 border-b border-zinc-800/80 pb-4 flex items-center gap-2">
+          <FileText size={18} className="text-emerald-400" />
+          <span>Prescription History</span>
+        </h2>
+
+        {loadingPrescriptions ? (
+          <div className="text-center py-6 text-zinc-500 text-sm font-semibold">Loading prescriptions...</div>
+        ) : prescriptions.length === 0 ? (
+          <div className="text-center py-8 text-zinc-500 text-sm font-medium">
+            No prescriptions yet — they'll appear here after a doctor visit.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {prescriptions.map((c) => (
+              <div key={c.id} className="p-5 bg-[#242426] border border-zinc-805 rounded-2xl space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100 text-base">
+                      {c.booking?.slot?.doctor?.user?.name}
+                    </h3>
+                    <p className="text-emerald-400 text-xs font-semibold tracking-wider uppercase">
+                      {c.booking?.slot?.doctor?.specialization}
+                    </p>
+                  </div>
+                  <div className="text-zinc-500 text-xs font-semibold">
+                    {c.createdAt ? format(parseISO(c.createdAt), 'MMM d, yyyy • h:mm a') : 'Date unknown'}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-800/50 space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                      Diagnosis Notes
+                    </label>
+                    <p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
+                      {c.diagnosisNotes || <span className="text-zinc-650 italic">None provided</span>}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                      Prescribed Medicines / Instructions
+                    </label>
+                    <p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
+                      {c.prescription || <span className="text-zinc-650 italic">None provided</span>}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

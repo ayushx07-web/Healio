@@ -28,6 +28,7 @@ buildNumber.properties
 # OS files
 .DS_Store
 Thumbs.db
+hs_err_pid*.log
 
 # Database
 backend/data/

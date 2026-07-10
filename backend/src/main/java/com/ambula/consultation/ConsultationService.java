@@ -6,6 +6,8 @@ import com.ambula.consultation.dto.ConsultationRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ConsultationService {
@@ -31,5 +33,9 @@ public class ConsultationService {
     public Consultation getByBookingId(Long bookingId) {
         return consultationRepository.findByBookingId(bookingId)
                 .orElse(null);
+    }
+
+    public List<Consultation> getMyConsultations(String email) {
+        return consultationRepository.findAllByPatientEmail(email);
     }
 }

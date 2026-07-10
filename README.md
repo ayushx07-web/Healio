@@ -1,10 +1,15 @@
-# Healio - Doctor Appointment Platform & AI Triage Room
+# Healio
 
-Healio is a full-stack doctor appointment booking and clinical consultation platform built with **Spring Boot** and **React**, featuring concurrency-safe slot bookings and AI-powered symptom triage and prescription formatting using the **Groq API** (Llama 3.1).
+Healio is a doctor appointment booking and clinical consultation platform built with Spring Boot and React. The core engineering focus is on concurrency-safe slot bookings and an AI-powered triage and prescription formatting room using the Groq API (Llama 3.1).
+
+## Live Demo
+
+- **Frontend:** [https://ambula.vercel.app](https://ambula.vercel.app)
+- **Backend:** Hosted on Render (using Render's free tier, meaning the backend will spin down after a period of inactivity. If the first page load takes a few seconds, it is just the server waking up).
 
 ---
 
-## 🏗️ Architecture & System Design
+## Architecture & System Design
 
 ```
 +-------------------------------------------------------+
@@ -36,31 +41,36 @@ Healio is a full-stack doctor appointment booking and clinical consultation plat
 +-------------------------+
 ```
 
-### Backend Layer Mapping
-* **REST Controllers (`com.ambula.*`)**: Exposes REST interfaces with DTO validations, maps exception types to correct HTTP statuses (e.g., mapping booking conflicts to `409 Conflict`).
-* **Service Layer (`com.ambula.*`)**: Coordinates transactions, manages locks, and integrates external clients like HTTP-based Groq calls.
-* **JPA/Repository Layer (`com.ambula.*`)**: Declares database queries using Spring Data JPA, managing row locks and transactions.
-* **H2 Database**: Operates as a file-based embedded PostgreSQL-compatible relational store.
+### System Component Breakdown
+
+- **REST Controllers (`com.ambula.*`)**: Handles HTTP entry points and requests, validates DTO inputs, and maps backend domain exceptions to clean HTTP responses (for example, converting booking conflicts to `409 Conflict`).
+- **Service Layer (`com.ambula.*`)**: Handles business logic, controls transaction contexts, manages resource locks, and coordinates external calls to the Groq API.
+- **Repository/JPA Layer (`com.ambula.*`)**: Manages interaction with the database using Spring Data JPA. This layer declares database query specifications, row locking behaviors, and custom queries.
+- **H2 Database**: Runs locally as an embedded file-based relational database operating in PostgreSQL mode.
 
 ---
 
-## 🔒 Concurrency & Double-Booking Prevention
+## Preventing Double-Bookings (Concurrency Control)
 
-### The Problem
-In an active medical booking portal, multiple patients will attempt to book the same popular slot at the same instant. A double-booking is a critical failure that directly degrades system reliability and provider trust. 
+### The Challenge
 
-### Why Pessimistic Locking over Optimistic Locking?
-To prevent double bookings, this system implements a database-level **Pessimistic Write Lock** (`SELECT ... FOR UPDATE` via Hibernate `@Lock(LockModeType.PESSIMISTIC_WRITE)`):
+In scheduling platforms, it is common for multiple users to attempt to book the same popular slot at the exact same instant. Double-booking a slot is a critical system failure that breaks trust between providers and patients.
 
-* **Optimistic Locking (`@Version`):** Checks version columns at commit time. Under high contention (e.g., 10 users booking a single open slot simultaneously), 9 transactions will perform full validation, query the database, and only fail at commit time. This wastes application and database server CPU cycles on doomed work and leads to a frustrating user experience.
-* **Pessimistic Locking (`PESSIMISTIC_WRITE`):** The first transaction to call `findByIdWithLock` immediately acquires a write lock on the target slot row. Any concurrent transaction attempting to query or write that same row blocks and waits at the database level until the holding transaction either commits or rolls back. 
+### Choosing Pessimistic Locking over Optimistic Locking
 
-In booking systems, **consistency overrides throughput**. A minor delay (waiting for a lock to clear) is vastly superior to transaction failure or a silent double-booking.
+To guarantee that a slot can never be booked twice under concurrent conditions, this system implements a database-level **Pessimistic Write Lock** (`SELECT ... FOR UPDATE` via Hibernate `@Lock(LockModeType.PESSIMISTIC_WRITE)`).
 
-### Defense-In-Depth: Unique Database Constraint
-Even if application-level validation slips (e.g., during database migration or isolation level mismatch), the database enforces a `UNIQUE(slot_id)` constraint on the `bookings` table. This serves as a fail-safe. If two transactions somehow reach the insert stage, the H2/Postgres engine will reject the second transaction with a unique constraint violation.
+- **Optimistic Locking (`@Version`):** Version checks happen at commit time. Under high contention (e.g., 10 users booking a single open slot simultaneously), 9 transactions would perform validation and query the database only to fail at commit time. This wastes application and database server CPU cycles on doomed work, and leads to a frustrating user experience.
+- **Pessimistic Locking (`PESSIMISTIC_WRITE`):** The first transaction to call `findByIdWithLock` immediately acquires a write lock on the target slot row. Any concurrent transaction attempting to query or write that same row blocks and waits at the database level until the holding transaction either commits or rolls back. 
+
+In booking systems, ensuring absolute data consistency is more important than raw concurrency throughput. A small latency delay (waiting for a lock to clear) is a much better trade-off than transaction failure or a silent double-booking.
+
+### Fail-Safe: Unique Database Constraint
+
+As a fallback layer, the database enforces a `UNIQUE(slot_id)` constraint on the `bookings` table. This serves as a final safety check. Even if validation logic gets bypassed (due to misconfiguration or isolation level differences), the H2/Postgres engine will reject the second transaction with a unique constraint violation.
 
 ### End-to-End Conflict Flow
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -68,7 +78,7 @@ sequenceDiagram
     actor Patient2 as Patient 2 (Blocked)
     participant DB as Database (H2)
     participant API as BookingService
-
+   
     Patient1->>API: bookSlot(slot_1)
     Patient2->>API: bookSlot(slot_1)
     
@@ -79,7 +89,7 @@ sequenceDiagram
     Note over API,DB: Transaction 2 starts
     API->>DB: findByIdWithLock(slot_1)
     Note over DB: Transaction 2 blocks & waits...
-
+   
     API->>DB: Insert Booking (slot_1)
     Note over API,DB: Transaction 1 commits & releases lock
     
@@ -90,51 +100,53 @@ sequenceDiagram
     API-->>Patient2: HTTP 409 Conflict (with next available slot suggestions)
 ```
 
-1. The second request is rejected with a `409 Conflict` status containing suggestions for the doctor's **next available slot**.
-2. The React frontend catches the `409` response and parses the suggested slot ID and time.
-3. The UI automatically displays a suggestion card (e.g., *"That slot was just booked! Next available: Friday, June 12 at 10:30 AM"*) and pre-selects the recommended slot for user confirmation.
+1. When a concurrent request is blocked and then rejected, the API throws a `SlotAlreadyTakenException` which resolves to a `409 Conflict` status. This response carries metadata suggesting the doctor's **next available slot**.
+2. The React frontend catches this `409` response, parses the suggested slot ID and time.
+3. The UI automatically displays a recommendation card (e.g., *"That slot was just booked! Next available: Friday, June 12 at 10:30 AM"*) and pre-selects the recommended slot for user confirmation.
 
 ---
 
-## 🤖 AI Integrations (Powered by Groq Llama 3.1)
+## AI Features (Powered by Groq Llama 3.1)
 
 ### 1. Symptom-to-Specialist Suggester
-Patients input unstructured descriptions of their symptoms. The app hits Llama 3.1 with system prompts to identify the matching doctor specialization and write a simple medical triage justification.
-* **⚠️ Limit:** LLM categorization is *suggestive* only. It is not a clinical diagnosis. It guides patients to the correct scheduling page but warns them that triage suggestions must be reviewed by a human healthcare provider.
+Patients input unstructured descriptions of their symptoms. The app uses Llama 3.1 with system prompts to identify the matching doctor specialization and write a simple medical triage justification.
+* **Clinical Limit:** LLM categorization is suggestive only. It is not a clinical diagnosis. It guides patients to the correct scheduling page but warns them that triage suggestions must be reviewed by a human healthcare provider.
 
 ### 2. AI Prescription Formatter
 Doctors dictate or type messy consultation notes (e.g., *"give aspirin 75mg once daily after meals for 10 days, patient needs rest, follow up next week"*). The model outputs structured JSON separating the diagnosis, a structured medications table, general lifestyle advice, and follow-up times.
-* **⚠️ Limit:** The formatted output is a draft *formatting-only* tool. LLMs are subject to hallucination. Doctors must thoroughly review, modify, and authorize the generated structured prescription details before saving it to the patient's record.
+* **Clinical Limit:** The formatted output is a draft formatting-only tool. LLMs are subject to hallucination. Doctors must thoroughly review, modify, and authorize the generated structured prescription details before saving it to the patient's record.
 
 ---
 
-## 📂 Key Source Code Structure
+## Codebase Structure
 
 ### Backend (`backend/src/main/java`)
 * **Entities**:
-  * [Booking.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/Booking.java): Models the scheduling table with a `UNIQUE(slot_id)` database mapping.
-  * [Slot.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/slot/Slot.java): Manages the start, end, and blocked status of calendar slots.
+  - [Booking.java](backend/src/main/java/com/ambula/booking/Booking.java): Models the scheduling table with a `UNIQUE(slot_id)` database mapping.
+  - [Slot.java](backend/src/main/java/com/ambula/slot/Slot.java): Manages the start, end, and blocked status of calendar slots.
 * **Concurrency Locking**:
-  * [SlotRepository.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/slot/SlotRepository.java#L14-L16): Contains the pessimistic lock method `findByIdWithLock(id)`.
+  - [SlotRepository.java](backend/src/main/java/com/ambula/slot/SlotRepository.java): Contains the pessimistic lock method `findByIdWithLock(id)`.
 * **Services**:
-  * [BookingService.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/BookingService.java): Manages transaction contexts and coordinates slot validation and locking.
-  * [GroqService.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/ai/GroqService.java): Integrates HTTP-based completions via JSON mode prompts.
+  - [BookingService.java](backend/src/main/java/com/ambula/booking/BookingService.java): Manages transaction contexts and coordinates slot validation and locking.
+  - [GroqService.java](backend/src/main/java/com/ambula/ai/GroqService.java): Integrates HTTP-based completions via JSON mode prompts.
 * **Controllers**:
-  * [BookingController.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/BookingController.java): Converts slot conflicts into JSON conflict suggestions.
+  - [BookingController.java](backend/src/main/java/com/ambula/booking/BookingController.java): Converts slot conflicts into JSON conflict suggestions.
 
 ### Frontend (`frontend/src`)
-* [axios.js](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/api/axios.js): Intercepts `401 Unauthorized` API responses to coordinate session renewal.
-* [SlotPicker.jsx](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/components/SlotPicker.jsx): Organizes slots into calendar date and time sections.
-* [ConsultationForm.jsx](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/pages/doctor/ConsultationForm.jsx): Doctor clinical interface showcasing the AI formatting response.
+* [axios.js](frontend/src/api/axios.js): Intercepts `401 Unauthorized` API responses to coordinate session renewal.
+* [SlotPicker.jsx](frontend/src/components/SlotPicker.jsx): Organizes slots into calendar date and time sections.
+* [ConsultationForm.jsx](frontend/src/pages/doctor/ConsultationForm.jsx): Doctor clinical interface showcasing the AI formatting response.
 
 ---
 
-## 🧪 Headline Concurrency Verification Test
+## Concurrency Integration Test
 
-To verify the system's lock integrity under load, a multi-threaded integration test was created:
+To verify the lock behavior under concurrent load, I created a multi-threaded integration test:
 
-### [BookingServiceConcurrencyTest.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/test/java/com/ambula/booking/BookingServiceConcurrencyTest.java)
-Spawns two concurrent threads using Java `ExecutorService` and aligns their execution using a `CyclicBarrier`. Both threads invoke `bookSlot` at the exact same moment for the same slot ID:
+### [BookingServiceConcurrencyTest.java](backend/src/test/java/com/ambula/booking/BookingServiceConcurrencyTest.java)
+
+This test spawns two concurrent threads using Java's `ExecutorService` and aligns their exact execution start time using a `CyclicBarrier`. Both threads invoke `bookSlot` at the exact same moment for the same slot ID:
+
 ```java
 @SpringBootTest
 public class BookingServiceConcurrencyTest {
@@ -157,11 +169,12 @@ public class BookingServiceConcurrencyTest {
     }
 }
 ```
-* **Result:** Exactly **one** transaction commits successfully, while the concurrent request is blocked and rejected (throwing either the application-level `SlotAlreadyTakenException` or a database-level `DataIntegrityViolationException`).
+
+* **Test Outcome:** Exactly one transaction commits successfully, while the concurrent request is blocked and rejected (throwing either the application-level `SlotAlreadyTakenException` or a database-level `DataIntegrityViolationException`).
 
 ---
 
-## ⚙️ Development vs. Production-Grade Gaps
+## Development vs. Production Gaps
 
 | Feature Area | Current Local Development | Production-Grade Design |
 | :--- | :--- | :--- |
@@ -173,9 +186,9 @@ public class BookingServiceConcurrencyTest {
 
 ---
 
-## ⛔ Honest Limitations
+## Honest Limitations
 
-* **No Real-time Availability Sync:** There is no WebSocket/SSE connection to sync slot bookings across different browser tabs in real-time. If a slot is booked, other patients only see the change upon reloading the search results or when trying to book it (triggering the 409 flow).
+* **No Real-time Availability Sync:** There is no WebSocket or Server-Sent Events (SSE) connection to sync slot bookings across different browser tabs in real-time. If a slot is booked, other patients only see the change upon reloading the search results or when trying to book it (triggering the 409 flow).
 * **No Video Conferencing Infra:** The platform supports clinical records and prescription formatting but does not integrate WebRTC or video servers for remote virtual visits.
 * **No Billing/Payment Gateways:** Consultation fees are displayed, but there is no payment gateway integration (e.g., Stripe, Razorpay) to collect fees during booking.
 * **Seeded Doctor Profiles:** Doctor listings are seeded dynamically on startup and cannot be added or managed via a public administrative panel.
