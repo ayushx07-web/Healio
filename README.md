@@ -4,7 +4,7 @@ Healio is a doctor appointment booking and clinical consultation platform built 
 
 ## Live Demo
 
--https://healio-gray.vercel.app/
+https://healio-gray.vercel.app/
 
 ---
 
