@@ -171,19 +171,8 @@ public class BookingServiceConcurrencyTest {
 
 * **Test Outcome:** Exactly one transaction commits successfully, while the concurrent request is blocked and rejected (throwing either the application-level `SlotAlreadyTakenException` or a database-level `DataIntegrityViolationException`).
 
----
 
-## Development vs. Production Gaps
 
-| Feature Area | Current Local Development | Production-Grade Design |
-| :--- | :--- | :--- |
-| **Database** | Embedded file-based H2 Database | Managed PostgreSQL (e.g., AWS RDS) with HikariCP connection pool tuning |
-| **Authentication** | Plaintext H2 seeded credentials | Production OAuth2 server / Spring Security Crypto with refresh tokens |
-| **Secrets & Keys** | Environment variables / config property fallbacks | HashiCorp Vault / AWS Secrets Manager |
-| **AI API Gateway** | Direct unthrottled Groq client HTTP requests | Redis Token Bucket rate-limiting to control API costs and prevent DoS |
-| **Audit Trails** | basic JPA lifecycle logs | Dedicated audit tables mapping doctor consultations to booking reference histories |
-
----
 
 ## Honest Limitations
 
