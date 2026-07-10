@@ -77,11 +77,7 @@ public class GroqService {
 
         String responseContent = callGroq(systemPrompt, rawNotes);
         try {
-            // Replace any single quotes in the output with double quotes in case Llama outputs non-standard JSON
             String sanitizedContent = responseContent.trim();
-            if (sanitizedContent.startsWith("{")) {
-                sanitizedContent = sanitizedContent.replace("'", "\"");
-            }
             return objectMapper.readValue(sanitizedContent, FormattedPrescription.class);
         } catch (Exception e) {
             throw new GroqApiException("Failed to parse Groq response for prescription formatting: " + responseContent, e);
