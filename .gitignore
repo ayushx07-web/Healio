@@ -31,3 +31,9 @@ Thumbs.db
 
 # Database
 backend/data/
+
+# Environment files
+.env
+*.env
+!*.env.example
+

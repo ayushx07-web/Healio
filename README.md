@@ -112,20 +112,20 @@ Doctors dictate or type messy consultation notes (e.g., *"give aspirin 75mg once
 
 ### Backend (`backend/src/main/java`)
 * **Entities**:
-  * [Booking.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/booking/Booking.java): Models the scheduling table with a `UNIQUE(slot_id)` database mapping.
-  * [Slot.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/slot/Slot.java): Manages the start, end, and blocked status of calendar slots.
+  * [Booking.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/Booking.java): Models the scheduling table with a `UNIQUE(slot_id)` database mapping.
+  * [Slot.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/slot/Slot.java): Manages the start, end, and blocked status of calendar slots.
 * **Concurrency Locking**:
-  * [SlotRepository.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/slot/SlotRepository.java#L14-L16): Contains the pessimistic lock method `findByIdWithLock(id)`.
+  * [SlotRepository.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/slot/SlotRepository.java#L14-L16): Contains the pessimistic lock method `findByIdWithLock(id)`.
 * **Services**:
-  * [BookingService.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/booking/BookingService.java): Manages transaction contexts and coordinates slot validation and locking.
-  * [GroqService.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/ai/GroqService.java): Integrates HTTP-based completions via JSON mode prompts.
+  * [BookingService.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/BookingService.java): Manages transaction contexts and coordinates slot validation and locking.
+  * [GroqService.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/ai/GroqService.java): Integrates HTTP-based completions via JSON mode prompts.
 * **Controllers**:
-  * [BookingController.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/main/java/com/ambula/booking/BookingController.java): Converts slot conflicts into JSON conflict suggestions.
+  * [BookingController.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/main/java/com/ambula/booking/BookingController.java): Converts slot conflicts into JSON conflict suggestions.
 
 ### Frontend (`frontend/src`)
-* [axios.js](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/frontend/src/api/axios.js): Intercepts `401 Unauthorized` API responses to coordinate session renewal.
-* [SlotPicker.jsx](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/frontend/src/components/SlotPicker.jsx): Organizes slots into calendar date and time sections.
-* [ConsultationForm.jsx](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/frontend/src/pages/doctor/ConsultationForm.jsx): Doctor clinical interface showcasing the AI formatting response.
+* [axios.js](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/api/axios.js): Intercepts `401 Unauthorized` API responses to coordinate session renewal.
+* [SlotPicker.jsx](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/components/SlotPicker.jsx): Organizes slots into calendar date and time sections.
+* [ConsultationForm.jsx](https://github.com/ayushx07-web/Healio/blob/main/frontend/src/pages/doctor/ConsultationForm.jsx): Doctor clinical interface showcasing the AI formatting response.
 
 ---
 
@@ -133,7 +133,7 @@ Doctors dictate or type messy consultation notes (e.g., *"give aspirin 75mg once
 
 To verify the system's lock integrity under load, a multi-threaded integration test was created:
 
-### [BookingServiceConcurrencyTest.java](file:///c:/Users/kandp/OneDrive/Desktop/Ambula/backend/src/test/java/com/ambula/booking/BookingServiceConcurrencyTest.java)
+### [BookingServiceConcurrencyTest.java](https://github.com/ayushx07-web/Healio/blob/main/backend/src/test/java/com/ambula/booking/BookingServiceConcurrencyTest.java)
 Spawns two concurrent threads using Java `ExecutorService` and aligns their execution using a `CyclicBarrier`. Both threads invoke `bookSlot` at the exact same moment for the same slot ID:
 ```java
 @SpringBootTest
