@@ -1,8 +1,10 @@
 import { MapPin, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function DoctorCard({ doctor }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div
@@ -28,7 +30,13 @@ export default function DoctorCard({ doctor }) {
       </div>
       <div className="mt-5 pt-3 border-t border-zinc-800/60 flex justify-between items-center text-xs text-zinc-400">
         <span className="font-medium text-zinc-500">{doctor.experienceYears} years experience</span>
-        <span className="text-emerald-400 font-bold group-hover:underline transition">Book Appointment →</span>
+        {user?.role === 'DOCTOR' ? (
+          <span className="text-red-400 font-semibold bg-red-950/10 px-2.5 py-1 rounded-md border border-red-900/20">
+            Doctor accounts can't book
+          </span>
+        ) : (
+          <span className="text-emerald-400 font-bold group-hover:underline transition">Book Appointment →</span>
+        )}
       </div>
     </div>
   );

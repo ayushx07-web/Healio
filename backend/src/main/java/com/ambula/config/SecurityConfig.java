@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/ai/suggest-specialist").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/ai/format-prescription").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.POST, "/api/bookings").hasRole("PATIENT")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

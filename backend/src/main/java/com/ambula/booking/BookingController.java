@@ -22,6 +22,15 @@ public class BookingController {
             @Valid @RequestBody BookingRequest request,
             Authentication auth) {
         try {
+            if (auth != null) {
+                boolean isPatient = auth.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"));
+                if (!isPatient) {
+                    return ResponseEntity.status(403).body(Map.of(
+                            "message", "Doctor accounts can't book appointments."
+                    ));
+                }
+            }
             String userEmail = (auth != null) ? auth.getName() : null;
             BookingResponse response = bookingService.bookSlot(request, userEmail);
             return ResponseEntity.ok(response);

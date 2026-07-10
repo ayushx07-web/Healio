@@ -15,9 +15,11 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6">
-          <Link to="/search" className="text-sm font-medium text-zinc-300 hover:text-white transition duration-200">
-            Find doctors
-          </Link>
+          {user?.role !== 'DOCTOR' && (
+            <Link to="/search" className="text-sm font-medium text-zinc-300 hover:text-white transition duration-200">
+              Find doctors
+            </Link>
+          )}
 
           {user ? (
             user.role === 'DOCTOR' ? (

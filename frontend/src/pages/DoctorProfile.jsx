@@ -108,74 +108,83 @@ export default function DoctorProfile() {
       {/* Patient details Form / Authentication Prompt */}
       {selectedSlot && (
         <div className="bg-[#1c1c1e] rounded-3xl border border-zinc-850 p-6 md:p-8 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
-          {user && user.role === 'PATIENT' ? (
-            <>
-              <h2 className="text-lg font-bold text-zinc-200 mb-2">Patient Information</h2>
-              <p className="text-emerald-400 text-xs font-semibold bg-emerald-950/10 p-3 rounded-xl border border-emerald-900/20 mb-4 animate-in fade-in duration-300">
-                ✓ Logged in as <span className="font-bold">{user.name}</span>. Your health summary is linked to this appointment.
-              </p>
-              <form onSubmit={(e) => { e.preventDefault(); handleBook(); }} className="space-y-5">
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
-                    Patient Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.patientName}
-                    onChange={(e) => setForm({ ...form, patientName: e.target.value })}
-                    placeholder="Enter full name"
-                    className="w-full px-4 py-3 bg-[#242426] border border-zinc-805 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition duration-200"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+          {user ? (
+            user.role === 'PATIENT' ? (
+              <>
+                <h2 className="text-lg font-bold text-zinc-200 mb-2">Patient Information</h2>
+                <p className="text-emerald-400 text-xs font-semibold bg-emerald-950/10 p-3 rounded-xl border border-emerald-900/20 mb-4 animate-in fade-in duration-300">
+                  ✓ Logged in as <span className="font-bold">{user.name}</span>. Your health summary is linked to this appointment.
+                </p>
+                <form onSubmit={(e) => { e.preventDefault(); handleBook(); }} className="space-y-5">
                   <div>
                     <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
-                      Patient Age
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      max="120"
-                      value={form.patientAge}
-                      onChange={(e) => setForm({ ...form, patientAge: e.target.value })}
-                      placeholder="Age"
-                      className="w-full px-4 py-3 bg-[#242426] border border-zinc-805 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition duration-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
-                      Mobile Number
+                      Patient Name
                     </label>
                     <input
                       type="text"
                       required
-                      pattern="^[6-9]\d{9}$"
-                      title="Enter a valid 10-digit Indian mobile number"
-                      value={form.patientPhone}
-                      onChange={(e) => setForm({ ...form, patientPhone: e.target.value })}
-                      placeholder="Indian Mobile Number"
+                      value={form.patientName}
+                      onChange={(e) => setForm({ ...form, patientName: e.target.value })}
+                      placeholder="Enter full name"
                       className="w-full px-4 py-3 bg-[#242426] border border-zinc-805 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition duration-200"
                     />
                   </div>
-                </div>
-
-                {error && (
-                  <div className="bg-red-950/20 text-red-400 text-sm p-4 rounded-xl border border-red-900/40 font-semibold animate-shake">
-                    {error}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                        Patient Age
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        max="120"
+                        value={form.patientAge}
+                        onChange={(e) => setForm({ ...form, patientAge: e.target.value })}
+                        placeholder="Age"
+                        className="w-full px-4 py-3 bg-[#242426] border border-zinc-805 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                        Mobile Number
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        pattern="^[6-9]\d{9}$"
+                        title="Enter a valid 10-digit Indian mobile number"
+                        value={form.patientPhone}
+                        onChange={(e) => setForm({ ...form, patientPhone: e.target.value })}
+                        placeholder="Indian Mobile Number"
+                        className="w-full px-4 py-3 bg-[#242426] border border-zinc-805 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition duration-200"
+                      />
+                    </div>
                   </div>
-                )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#0e4d38] text-white py-4 rounded-xl font-bold hover:bg-[#0b3b2b] transition duration-200 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                >
-                  {loading ? 'Booking...' : `Confirm Booking — ₹${doctor.consultationFee}`}
-                </button>
-              </form>
-            </>
+                  {error && (
+                    <div className="bg-red-950/20 text-red-400 text-sm p-4 rounded-xl border border-red-900/40 font-semibold animate-shake">
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#0e4d38] text-white py-4 rounded-xl font-bold hover:bg-[#0b3b2b] transition duration-200 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  >
+                    {loading ? 'Booking...' : `Confirm Booking — ₹${doctor.consultationFee}`}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="text-center py-6 space-y-3 animate-in fade-in duration-300">
+                <h2 className="text-lg font-bold text-zinc-200">Booking Unavailable</h2>
+                <p className="text-red-400 text-sm font-semibold bg-red-950/10 p-3.5 rounded-xl border border-red-900/20 max-w-md mx-auto">
+                  Doctor accounts can't book appointments.
+                </p>
+              </div>
+            )
           ) : (
             <div className="text-center py-6 space-y-4">
               <h2 className="text-lg font-bold text-zinc-200">Sign in to book appointment</h2>
