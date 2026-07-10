@@ -9,8 +9,8 @@ import java.util.Optional;
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     @Query("SELECT d FROM Doctor d WHERE " +
-           "(:specialization IS NULL OR LOWER(d.specialization) LIKE LOWER(CONCAT('%', :specialization, '%'))) AND " +
-           "(:location IS NULL OR LOWER(d.location) LIKE LOWER(CONCAT('%', :location, '%')))")
+           "LOWER(d.specialization) LIKE LOWER(CONCAT('%', COALESCE(:specialization, d.specialization), '%')) AND " +
+           "LOWER(d.location) LIKE LOWER(CONCAT('%', COALESCE(:location, d.location), '%'))")
     List<Doctor> search(@Param("specialization") String specialization,
                         @Param("location") String location);
 
