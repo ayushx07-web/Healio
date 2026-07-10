@@ -4,8 +4,7 @@ Healio is a doctor appointment booking and clinical consultation platform built 
 
 ## Live Demo
 
-- **Frontend:** [https://ambula.vercel.app](https://ambula.vercel.app)
-- **Backend:** Hosted on Render (using Render's free tier, meaning the backend will spin down after a period of inactivity. If the first page load takes a few seconds, it is just the server waking up).
+-https://healio-gray.vercel.app/
 
 ---
 
