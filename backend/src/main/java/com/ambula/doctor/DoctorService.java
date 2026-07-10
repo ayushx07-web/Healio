@@ -17,7 +17,9 @@ public class DoctorService {
     private final SlotRepository slotRepository;
 
     public List<Doctor> search(String specialization, String location) {
-        return doctorRepository.search(specialization, location);
+        String specPattern = "%" + (specialization == null ? "" : specialization) + "%";
+        String locPattern = "%" + (location == null ? "" : location) + "%";
+        return doctorRepository.search(specPattern, locPattern);
     }
 
     public Doctor getById(Long id) {
